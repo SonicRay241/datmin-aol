@@ -1,0 +1,12 @@
+install.packages(
+  c(
+    "shiny",
+    "bslib",
+    "dplyr",
+    "readxl",
+    "lubridate",
+    "tidyr",
+    "ggplot2",
+    "ggiraph"
+  )
+)
