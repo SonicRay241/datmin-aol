@@ -26,6 +26,11 @@ read_data <- function(name) {
   read.csv(file.path(paste(data_path), name))
 }
 
+
+# baru deh mau edit apa
+# kalau udah
+# save (ctrl + s)
+
 # Insert Data
 data11 <- read_data("SPKU11.csv")
 data12 <- read_data("SPKU12.csv")
