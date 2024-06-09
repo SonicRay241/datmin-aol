@@ -9,6 +9,8 @@
 │   └── server1.r           # Shiny server logic
 ├── .env                    # Your environment secrets
 ├── .env-example            # .env example, do not remove
+├── install.r               # Script to install all dependencies
+├── main.r                  # Main runtime of shiny
 └── README.md               # This file
 ```
 
