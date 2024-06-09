@@ -13,11 +13,11 @@ readRenviron(".env")
 path <-  Sys.getenv("PROJECT_PATH")
 
 get_page <- function(name) {
-  source(file.path(paste(path, "/pages", sep = ""), name))
+  source(file.path(paste(path, "/pages", sep = ""), name))$value
 }
 
 get_server <- function(name) {
-  source(file.path(paste(path, "/server", sep = ""), name))
+  source(file.path(paste(path, "/server", sep = ""), name))$value
 }
 
 component1 <- get_page("component1.r")
@@ -39,7 +39,7 @@ ui <- fluidPage(
     "AOL Datmin",
     tabPanel(
       "Component 1",
-      component1$value
+      component1
     ),
     tabPanel(
       "Component 2",
