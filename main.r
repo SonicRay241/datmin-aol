@@ -9,20 +9,37 @@ library(ggplot2)
 
 library(ggiraph)
 
+# Load environment
+readRenviron(".env")
+path <-  Sys.getenv("PROJECT_PATH")
+
+get_page <- function(name) {
+  source(file.path(paste(path, "/pages", sep = ""), name))$value
+}
+
+get_server <- function(name) {
+  source(file.path(paste(path, "/server", sep = ""), name))$value
+}
+
+read_data <- function(name) {
+  data_path <- paste(path, "/data", sep = "")
+  read.csv(file.path(paste(data_path), name))
+}
+
 # Insert Data
-data11 <- read.csv("data/SPKU11.csv")
-data12 <- read.csv("data/SPKU12.csv")
-data13 <- read.csv("data/SPKU13.csv")
-data14 <- read.csv("data/SPKU14.csv")
-data15 <- read.csv("data/SPKU15.csv")
-data16 <- read.csv("data/SPKU16.csv")
-data17 <- read.csv("data/SPKU17.csv")
-data18 <- read.csv("data/SPKU18.csv")
-data19 <- read.csv("data/SPKU19.csv")
-data20 <- read.csv("data/SPKU20.csv")
-data21 <- read.csv("data/SPKU21.csv")
-data22 <- read.csv("data/SPKU22.csv")
-data23 <- read.csv("data/SPKU23.csv")
+data11 <- read_data("SPKU11.csv")
+data12 <- read_data("SPKU12.csv")
+data13 <- read_data("SPKU13.csv")
+data14 <- read_data("SPKU14.csv")
+data15 <- read_data("SPKU15.csv")
+data16 <- read_data("SPKU16.csv")
+data17 <- read_data("SPKU17.csv")
+data18 <- read_data("SPKU18.csv")
+data19 <- read_data("SPKU19.csv")
+data20 <- read_data("SPKU20.csv")
+data21 <- read_data("SPKU21.csv")
+data22 <- read_data("SPKU22.csv")
+data23 <- read_data("SPKU23.csv")
 
 # Renaming Columns
 colnames(data21) <- c("periode_data", "tanggal", "stasiun", "pm10", "pm25", "so2", "co", "o3", "no2", "max", "critical", "categori")
@@ -63,17 +80,6 @@ rm(from, to, convert)
 
 
 # View Main Logic
-readRenviron(".env")
-path <-  Sys.getenv("PROJECT_PATH")
-
-get_page <- function(name) {
-  source(file.path(paste(path, "/pages", sep = ""), name))$value
-}
-
-get_server <- function(name) {
-  source(file.path(paste(path, "/server", sep = ""), name))$value
-}
-
 component1 <- get_page("component1.r")
 
 custom_theme <- bootstrapLib(
@@ -122,4 +128,3 @@ server <- function(input, output) {
 }
 
 run_with_themer(shinyApp(ui = ui, server = server))
-
