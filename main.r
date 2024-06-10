@@ -53,7 +53,7 @@ data23$pm25 <- NULL
 
 # Combine all df into one
 start_data <- rbind(data11, data12, data13, data14, data15, data16, data17, data18, data19, data20, data21, data22, data23)
-# rm(data11, data12, data13, data14, data15, data16, data17, data18, data19, data20, data21, data22, data23)
+rm(data11, data12, data13, data14, data15, data16, data17, data18, data19, data20, data21, data22, data23)
 
 # Data Cleaning
 # Fix categorical data naming
@@ -71,7 +71,9 @@ for(from in convert$from){
 }
 start_data <- subset(start_data, grepl('[a-zA-Z]', stasiun))
 start_data$stasiun <- droplevels(start_data$stasiun)
-# rm(from, to, convert)
+
+unique(start_data$stasiun)
+rm(from, to, convert)
 
 # Convert columns to numeric
 data <- start_data %>%
@@ -85,7 +87,7 @@ data <- start_data %>%
     max = as.numeric(max),
   )
 
-# check the NA values of each columns. pm10 = 2035, s02 = 1656, co = 1494, 03 = 1725, no2 = 1655, max = 1096.
+# Check the NA values of each columns. pm10 = 2035, s02 = 1656, co = 1494, 03 = 1725, no2 = 1655, max = 1096.
 colSums(is.na(data))
 colSums(is.na(data)/nrow(data)*100)
 
@@ -101,49 +103,54 @@ data <- data %>%
   ) %>%
   ungroup()
 
-#replace NA values of "max" column with the max value of pm10, so2, co, o3, and no2, from the row.
+# replace values of "max" column with the max value of pm10, so2, co, o3, and no2, from the row.
 data <- data %>%
   rowwise() %>%
   mutate(
-    max = max(c(pm10, so2, co, o3, no2))
+    max = max(c(pm10, so2, co, o3, no2), na.rm = TRUE)
   ) %>%
   ungroup()
 
-# Replace blank values in 'critical' column with the column name of the max value in each row
+# Replace values in 'critical' column with the column name of the max value in each row
 data <- data %>%
   rowwise() %>%
   mutate(
-    critical = names(c("pm10", "so2", "co", "o3", "no2"))[which.max(c("pm10", "so2", "co", "o3", "no2"))]
+    critical = {
+      values <- c(pm10, so2, co, o3, no2)
+      col_names <- c("pm10", "so2", "co", "o3", "no2")
+      if (all(is.na(values))) {
+        NA_character_
+      } else {
+        col_names[which.max(values)]
+      }
+    }
   ) %>%
   ungroup()
-
-View(data)
 
 # Update 'categori' column based on the 'max' values
 data <- data %>%
   mutate(
-    categori = ifelse(
-      categori == "TIDAK ADA DATA",
+    categori = 
       case_when(
-        max >= 1 & max <= 50 ~ "BAIK",
-        max >= 51 & max <= 100 ~ "SEDANG",
-        max >= 101 & max <= 200 ~ "TIDAK SEHAT",
-        max >= 201 & max <= 300 ~ "SANGAT TIDAK SEHAT",
+        max > 0 & max <= 50 ~ "Baik",
+        max > 50 & max <= 100 ~ "Sedang",
+        max > 100 & max <= 200 ~ "Tidak Sehat",
+        max > 200 & max <= 300 ~ "Sangat Tidak Sehat",
+        max > 300 ~ "Berbahaya",
         TRUE ~ categori
-      ),
-      categori
+      )
     )
-  )
 
-#check lagi masi ada na values ga,klw masi ada omit aja(tinggal dikit2 doang)
+# Drop Missing Values=
 colSums(is.na(data))
 data <- na.omit(data)
 colSums(is.na(data))
-print(data)
-
-
-View(data)
 lapply(data, unique)
+
+
+
+
+
 
 
                   
@@ -169,8 +176,8 @@ plot <- monthly_data %>%
   layout(title="Data SPKU Jakarta 2011-2023",hovermode = "x unified")
 plot
 
-# test na.approx
-pm10app <- pm10app %>%
+# test plot 2
+pm10app <- data %>%
   group_by(stasiun, month = floor_date(tanggal, "month")) %>%
   summarise(
     pm10 = mean(pm10, na.rm = TRUE),
