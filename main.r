@@ -142,24 +142,10 @@ colSums(is.na(data))
 print(data)
 
 
-
-
-
 View(data)
 lapply(data, unique)
 
 
-
-
-
-
-
-na.omit(data)
-data$pm10 <- as.numeric(data$pm10)
-data$so2 <- as.numeric(data$so2)
-data$co <- as.numeric(data$co)
-data$o3 <- as.numeric(data$o3)
-data$no2 <- as.numeric(data$no2)
                   
 # test plot
 monthly_data <- data %>%
