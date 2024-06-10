@@ -3,6 +3,9 @@
 ## Project Structure
 ```
 .
+├── data                    # Folder consisting of data that will be used in the project
+│   ├── ...
+│   └── data.csv
 ├── pages                   # Folder consisting of shiny ui pages
 │   └── page1.r             # Shiny ui page
 ├── server                  # Folder consisting of shiny server logic

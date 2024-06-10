@@ -9,6 +9,8 @@ library(ggplot2)
 
 library(ggiraph)
 
+library(plotly)
+
 # Load environment
 readRenviron(".env")
 path <-  Sys.getenv("PROJECT_PATH")
@@ -67,16 +69,45 @@ for(from in convert$from){
            stasiun = if_else(stasiun == from, convert$to[convert$from == from], stasiun),
            stasiun = as.factor(stasiun))
 }
-
+glimpse(data)
 rm(from, to, convert)
 
 # Data Cleaning
+sum(is.na(data$tanggal))
+data$tanggal <- as.Date(data$tanggal, format = "%Y-%m-%d")
+sum(is.na(data$tanggal))
 
+data <- subset(data, grepl('[a-zA-Z]', stasiun))
+data$stasiun <- droplevels(data$stasiun)
+data <- subset(data, pm10!="---")
+na.omit(data)
+data$pm10 <- as.numeric(data$pm10)
+data$so2 <- as.numeric(data$so2)
+data$co <- as.numeric(data$co)
+data$o3 <- as.numeric(data$o3)
+data$no2 <- as.numeric(data$no2)
+                  
+# test plot
+monthly_data <- data %>%
+  group_by(month = floor_date(tanggal, "month")) %>%
+  summarise(
+    pm10 = mean(pm10,na.rm = TRUE),
+    so2 = mean(so2,na.rm = TRUE),
+    co = mean(co,na.rm = TRUE),
+    o3 = mean(o3,na.rm = TRUE),
+    no2 = mean(no2,na.rm = TRUE),
+    .groups = 'drop'
+  )
+na.omit(monthly_data)
 
-
-
-
-
+plot <- monthly_data %>%
+  plot_ly(x = ~month, y = ~pm10, name="pm10", type = 'scatter', mode = 'lines') %>%
+  add_trace(y=~so2, name="so2") %>%
+  add_trace(y=~co, name="co") %>%
+  add_trace(y=~o3, name="o3") %>%
+  add_trace(y=~no2, name="no3") %>%
+  layout(title="Data SPKU Jakarta 2011-2023",hovermode = "x unified")
+plot
 
 
 # View Main Logic
@@ -128,3 +159,5 @@ server <- function(input, output) {
 }
 
 run_with_themer(shinyApp(ui = ui, server = server))
+
+rm(list = ls())
