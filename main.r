@@ -72,7 +72,71 @@ rm(from, to, convert)
 
 # Data Cleaning
 
+# Convert "---" to NA and columns to numeric
+data <- data %>%
+  mutate(
+    pm10 = as.numeric(replace(pm10, pm10 == "---", NA)),
+    so2 = as.numeric(replace(so2, so2 == "---", NA)),
+    co = as.numeric(replace(co, co == "---", NA)),
+    o3 = as.numeric(replace(o3, o3 == "---", NA)),
+    no2 = as.numeric(replace(no2, no2 == "---", NA)),
+    max = as.numeric(replace(max, max == "0", NA))
+  )
 
+#check the NA values of each columns. pm10 = 2035, s02 = 1656, co = 1494, 03 = 1725, no2 = 1655, max = 1096.
+colSums(is.na(data))
+
+# Replace NA values with the mean of each group
+data <- data %>%
+  group_by(stasiun) %>%
+  mutate(
+    pm10 = ifelse(is.na(pm10), ceiling(mean(pm10, na.rm = TRUE)), pm10),
+    so2 = ifelse(is.na(so2), ceiling(mean(so2, na.rm = TRUE)), so2),
+    co = ifelse(is.na(co), ceiling(mean(co, na.rm = TRUE)), co),
+    o3 = ifelse(is.na(o3), ceiling(mean(o3, na.rm = TRUE)), o3),
+    no2 = ifelse(is.na(no2), ceiling(mean(no2, na.rm = TRUE)), no2)
+  ) %>%
+  ungroup()
+
+#replace NA values of "max" column with the max value of pm10, so2, co, o3, and no2, from the row.
+data <- data %>%
+  rowwise() %>%
+  mutate(
+    max = ifelse(is.na(max), max(c(pm10, so2, co, o3, no2), na.rm = TRUE), max)
+  ) %>%
+  ungroup()
+
+# Replace blank values in 'critical' column with the column name of the max value in each row
+data <- data %>%
+  rowwise() %>%
+  mutate(
+    critical = ifelse(critical == "", 
+                      c("pm10", "so2", "co", "o3", "no2")[which.max(c(pm10, so2, co, o3, no2))], 
+                      critical)
+  ) %>%
+  ungroup()
+
+# Update 'categori' column based on the 'max' values
+data <- data %>%
+  mutate(
+    categori = ifelse(
+      categori == "TIDAK ADA DATA",
+      case_when(
+        max >= 1 & max <= 50 ~ "BAIK",
+        max >= 51 & max <= 100 ~ "SEDANG",
+        max >= 101 & max <= 200 ~ "TIDAK SEHAT",
+        max >= 201 & max <= 300 ~ "SANGAT TIDAK SEHAT",
+        TRUE ~ categori
+      ),
+      categori
+    )
+  )
+
+#check lagi masi ada na values ga,klw masi ada omit aja(tinggal dikit2 doang)
+colSums(is.na(data))
+data <- na.omit(data)
+colSums(is.na(data))
+print(data)
 
 
 
