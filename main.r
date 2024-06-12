@@ -153,11 +153,9 @@ data <- na.omit(data)
 colSums(is.na(data))
 lapply(data, unique)
 
-
-
-# test plot
+# plot 1
 monthly_data <- data %>%
-  group_by(month = floor_date(tanggal, "month")) %>%
+  group_by(tanggal = floor_date(tanggal, "month")) %>%
   summarise(
     pm10 = mean(pm10, na.rm = TRUE),
     so2 = mean(so2, na.rm = TRUE),
@@ -165,12 +163,26 @@ monthly_data <- data %>%
     o3 = mean(o3, na.rm = TRUE),
     no2 = mean(no2, na.rm = TRUE),
     .groups = "drop"
-  )
-na.omit(monthly_data)
+  ) %>%
+  subset(tanggal > "2011-01-01" & tanggal < "2024-01-01")
+
+#if want per station
+monthly_data <- data %>%
+  group_by(stasiun, tanggal = floor_date(tanggal, "month")) %>%
+  summarise(
+    pm10 = mean(pm10, na.rm = TRUE),
+    so2 = mean(so2, na.rm = TRUE),
+    co = mean(co, na.rm = TRUE),
+    o3 = mean(o3, na.rm = TRUE),
+    no2 = mean(no2, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  subset(tanggal > "2011-01-01" & tanggal < "2024-01-01") %>%
+  subset(stasiun == "DKI1 (Bunderan HI)")
 
 plot <- monthly_data %>%
   plot_ly(
-    x = ~month,
+    x = ~tanggal,
     y = ~pm10,
     name = "pm10",
     type = "scatter",
@@ -183,27 +195,86 @@ plot <- monthly_data %>%
   layout(title = "Data SPKU Jakarta 2011-2023", hovermode = "x unified")
 plot
 
-# test plot 2
-pm10app <- data %>%
-  group_by(stasiun, month = floor_date(tanggal, "month")) %>%
+# plot 2
+polutan_tahunan <- data %>%
+  group_by(tanggal = floor_date(tanggal, "year")) %>%
   summarise(
     pm10 = mean(pm10, na.rm = TRUE),
     so2 = mean(so2, na.rm = TRUE),
     co = mean(co, na.rm = TRUE),
     o3 = mean(o3, na.rm = TRUE),
     no2 = mean(no2, na.rm = TRUE),
+    total = sum(c(pm10, so2, co, o3, no2), na.rm = TRUE),
     .groups = "drop"
   )
-plot <- pm10app %>%
-  plot_ly(
-    x = ~month,
-    y = ~pm10,
-    color = ~stasiun,
-    type = "scatter",
-    mode = "lines"
-  ) %>%
-  layout(title = " Data SPKU Jakarta 2011-2023", hovermode = "x unified")
+
+persentase_polutan_tahunan <- polutan_tahunan %>%
+  group_by(tanggal = floor_date(tanggal, "year")) %>%
+  summarise(
+    pm10 = pm10/total*100,
+    so2 = so2/total*100,
+    co = co/total*100,
+    o3 = o3/total*100,
+    no2 = no2/total*100,
+    .groups = "drop"
+  )
+
+plot <- persentase_polutan_tahunan %>%
+  plot_ly(x = ~tanggal, y=~pm10, type = 'bar', name = 'pm10', text = ~floor(pm10)) %>%
+  add_trace(y=~so2,name = 'so2', text = ~floor(so2)) %>% 
+  add_trace(y=~co,name = 'co', text = ~floor(co)) %>% 
+  add_trace(y=~o3,name = 'o3', text = ~floor(o3)) %>% 
+  add_trace(y=~no2,name = 'no2', text = ~floor(no2)) %>% 
+  layout(yaxis = list(title = 'Persentase(%)'),
+         barmode = 'stack',title="Persentase Polutan per Tahun")
 plot
+
+# plot 3
+kualitas_tahunan <- data %>%
+  group_by(tanggal = floor_date(tanggal, "year")) %>%
+  summarise(
+    Baik = sum(categori == "Baik"),
+    Sedang = sum(categori == "Sedang"),
+    TS = sum(categori == "Tidak Sehat"),
+    STS = sum(categori == "Sangat Tidak Sehat"),
+    Berbahaya = sum(categori == "Berbahaya"),
+    total = sum(c(Baik, Sedang, TS, STS, Berbahaya), na.rm = TRUE),
+    .groups = "drop"
+  )
+
+persentase_kualitas_tahunan <- kualitas_tahunan %>%
+  group_by(tanggal = floor_date(tanggal, "year")) %>%
+  summarise(
+    Baik = Baik/total*100,
+    Sedang = Sedang/total*100,
+    TS = TS/total*100,
+    STS = STS/total*100,
+    Berbahaya = Berbahaya/total*100,
+    .groups = "drop"
+  )
+
+plot <- persentase_kualitas_tahunan %>%
+  plot_ly(x = ~tanggal, y=~Baik, type = 'bar', name = 'Baik') %>%
+  add_trace(y=~Sedang,name = 'Sedang') %>% 
+  add_trace(y=~TS,name = 'Tidak Sehat') %>% 
+  add_trace(y=~STS,name = 'Sangat Tidak Sehat') %>% 
+  add_trace(y=~Berbahaya,name = 'Berbahaya') %>% 
+  layout(yaxis = list(title = 'Persentase(%)'),
+         barmode = 'stack',title="Persentase Kualitas Udara per Tahun")
+plot
+
+# plot 4
+
+
+
+
+
+
+
+
+
+
+
 
 
 
