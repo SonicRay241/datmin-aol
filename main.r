@@ -12,7 +12,7 @@ library(plotly)
 library(zoo)
 # Load environment
 readRenviron(".env")
-path <-  Sys.getenv("PROJECT_PATH")
+path <- Sys.getenv("PROJECT_PATH")
 
 get_page <- function(name) {
   source(file.path(paste(path, "/pages", sep = ""), name))$value
@@ -59,17 +59,23 @@ rm(data11, data12, data13, data14, data15, data16, data17, data18, data19, data2
 # Fix categorical data naming
 unique(start_data$stasiun)
 
-from <- c("DKI4", "DKI2", "DKI5", "DKI1","DKI3", "DKI5 Kebon Jeruk Jakarta Barat", "DKI1 Bunderan HI", "DKI2 Kelapa Gading", "DKI3 Jagakarsa", "DKI4 Lubang Buaya", "DKI5 Kebon Jeruk", "DKI5 (Kebon Jeruk) Jakarta Barat")
-to <- c("DKI4 (Lubang Buaya)", "DKI2 (Kelapa Gading)", "DKI5 (Kebon Jeruk)", "DKI1 (Bunderan HI)","DKI3 (Jagakarsa)", "DKI5 (Kebon Jeruk)", "DKI1 (Bunderan HI)", "DKI2 (Kelapa Gading)", "DKI3 (Jagakarsa)", "DKI4 (Lubang Buaya)", "DKI5 (Kebon Jeruk)", "DKI5 (Kebon Jeruk)")
+from <- c("DKI4", "DKI2", "DKI5", "DKI1", "DKI3", "DKI5 Kebon Jeruk Jakarta Barat", "DKI1 Bunderan HI", "DKI2 Kelapa Gading", "DKI3 Jagakarsa", "DKI4 Lubang Buaya", "DKI5 Kebon Jeruk", "DKI5 (Kebon Jeruk) Jakarta Barat")
+to <- c("DKI4 (Lubang Buaya)", "DKI2 (Kelapa Gading)", "DKI5 (Kebon Jeruk)", "DKI1 (Bunderan HI)", "DKI3 (Jagakarsa)", "DKI5 (Kebon Jeruk)", "DKI1 (Bunderan HI)", "DKI2 (Kelapa Gading)", "DKI3 (Jagakarsa)", "DKI4 (Lubang Buaya)", "DKI5 (Kebon Jeruk)", "DKI5 (Kebon Jeruk)")
 convert <- data.frame(from, to)
 
-for(from in convert$from){
+for (from in convert$from) {
   start_data <- start_data %>%
-    mutate(stasiun = as.character(stasiun),
-           stasiun = if_else(stasiun == from, convert$to[convert$from == from], stasiun),
-           stasiun = as.factor(stasiun))
+    mutate(
+      stasiun = as.character(stasiun),
+      stasiun = if_else(
+        stasiun == from,
+        convert$to[convert$from == from],
+        stasiun
+      ),
+      stasiun = as.factor(stasiun)
+    )
 }
-start_data <- subset(start_data, grepl('[a-zA-Z]', stasiun))
+start_data <- subset(start_data, grepl("[a-zA-Z]", stasiun))
 start_data$stasiun <- droplevels(start_data$stasiun)
 
 unique(start_data$stasiun)
@@ -78,7 +84,7 @@ rm(from, to, convert)
 # Convert columns to numeric
 data <- start_data %>%
   mutate(
-    tanggal = parse_date_time(tanggal, orders = c('ymd', 'dmy')),
+    tanggal = parse_date_time(tanggal, orders = c("ymd", "dmy")),
     pm10 = as.numeric(pm10),
     so2 = as.numeric(so2),
     co = as.numeric(co),
@@ -89,7 +95,7 @@ data <- start_data %>%
 
 # Check the NA values of each columns. pm10 = 2035, s02 = 1656, co = 1494, 03 = 1725, no2 = 1655, max = 1096.
 colSums(is.na(data))
-colSums(is.na(data)/nrow(data)*100)
+colSums(is.na(data) / nrow(data) * 100)
 
 # Using interpolation to replace NA values
 data <- data %>%
@@ -111,7 +117,7 @@ data <- data %>%
   ) %>%
   ungroup()
 
-# Replace values in 'critical' column with the column name of the max value in each row
+# Replace values in "critical" column with the column name of the max value in each row
 data <- data %>%
   rowwise() %>%
   mutate(
@@ -127,10 +133,10 @@ data <- data %>%
   ) %>%
   ungroup()
 
-# Update 'categori' column based on the 'max' values
+# Update "categori" column based on the "max" values
 data <- data %>%
   mutate(
-    categori = 
+    categori =
       case_when(
         max > 0 & max <= 50 ~ "Baik",
         max > 50 & max <= 100 ~ "Sedang",
@@ -139,7 +145,7 @@ data <- data %>%
         max > 300 ~ "Berbahaya",
         TRUE ~ categori
       )
-    )
+  )
 
 # Drop Missing Values=
 colSums(is.na(data))
@@ -149,31 +155,32 @@ lapply(data, unique)
 
 
 
-
-
-
-
-                  
 # test plot
 monthly_data <- data %>%
   group_by(month = floor_date(tanggal, "month")) %>%
   summarise(
-    pm10 = mean(pm10,na.rm = TRUE),
-    so2 = mean(so2,na.rm = TRUE),
-    co = mean(co,na.rm = TRUE),
-    o3 = mean(o3,na.rm = TRUE),
-    no2 = mean(no2,na.rm = TRUE),
-    .groups = 'drop'
+    pm10 = mean(pm10, na.rm = TRUE),
+    so2 = mean(so2, na.rm = TRUE),
+    co = mean(co, na.rm = TRUE),
+    o3 = mean(o3, na.rm = TRUE),
+    no2 = mean(no2, na.rm = TRUE),
+    .groups = "drop"
   )
 na.omit(monthly_data)
 
 plot <- monthly_data %>%
-  plot_ly(x = ~month, y = ~pm10, name="pm10", type = 'scatter', mode = 'lines') %>%
-  add_trace(y=~so2, name="so2") %>%
-  add_trace(y=~co, name="co") %>%
-  add_trace(y=~o3, name="o3") %>%
-  add_trace(y=~no2, name="no3") %>%
-  layout(title="Data SPKU Jakarta 2011-2023",hovermode = "x unified")
+  plot_ly(
+    x = ~month,
+    y = ~pm10,
+    name = "pm10",
+    type = "scatter",
+    mode = "lines"
+  ) %>%
+  add_trace(y = ~so2, name = "so2") %>%
+  add_trace(y = ~co, name = "co") %>%
+  add_trace(y = ~o3, name = "o3") %>%
+  add_trace(y = ~no2, name = "no3") %>%
+  layout(title = "Data SPKU Jakarta 2011-2023", hovermode = "x unified")
 plot
 
 # test plot 2
@@ -185,19 +192,18 @@ pm10app <- data %>%
     co = mean(co, na.rm = TRUE),
     o3 = mean(o3, na.rm = TRUE),
     no2 = mean(no2, na.rm = TRUE),
-    .groups = 'drop'
+    .groups = "drop"
   )
 plot <- pm10app %>%
-  plot_ly(x = ~month, y = ~pm10, color=~stasiun, type = 'scatter', mode = 'lines') %>%
-  layout(title="Data SPKU Jakarta 2011-2023",hovermode = "x unified")
+  plot_ly(
+    x = ~month,
+    y = ~pm10,
+    color = ~stasiun,
+    type = "scatter",
+    mode = "lines"
+  ) %>%
+  layout(title = " Data SPKU Jakarta 2011-2023", hovermode = "x unified")
 plot
-
-
-
-
-
-
-
 
 
 

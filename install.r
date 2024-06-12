@@ -7,6 +7,8 @@ install.packages(
     "lubridate",
     "tidyr",
     "ggplot2",
-    "ggiraph"
+    "ggiraph",
+    "plotly",
+    "zoo"
   )
 )
