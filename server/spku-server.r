@@ -1,7 +1,7 @@
 library(plotly)
 library(dplyr)
 
-particle_select_list <- c(
+pollutant_select_list <- c(
   "All",
   "PM10",
   "SO2",
@@ -10,7 +10,7 @@ particle_select_list <- c(
   "NO2"
 )
 
-particle_select_list_2 <- c(
+pollutant_select_list_2 <- c(
   "PM10",
   "SO2",
   "CO",
@@ -19,8 +19,8 @@ particle_select_list_2 <- c(
 )
 
 fn <- function(input, output, session, monthly_data, monthly_data_station) {
-  particle_selected <- reactive({
-    input$particle_input
+  pollutant_selected <- reactive({
+    input$pollutant_input
   })
 
   date_range <- reactive({
@@ -36,16 +36,16 @@ fn <- function(input, output, session, monthly_data, monthly_data_station) {
       # monthly_data <- monthly_data[monthly_data$stasiun == station_selected()]
       updateSelectizeInput(
         session,
-        "particle_input",
-        choices = particle_select_list,
+        "pollutant_input",
+        choices = pollutant_select_list,
         selected = "All",
         server = TRUE
       )
     } else {
       updateSelectizeInput(
         session,
-        "particle_input",
-        choices = particle_select_list_2,
+        "pollutant_input",
+        choices = pollutant_select_list_2,
         selected = "PM10",
         server = TRUE
       )
@@ -54,7 +54,7 @@ fn <- function(input, output, session, monthly_data, monthly_data_station) {
 
   renderPlotly({
     get_avg_plot <- function() {
-      if (particle_selected() == "All") {
+      if (pollutant_selected() == "All") {
         monthly_data %>%
           subset(month > date_range()[1] & month < date_range()[2]) %>%
           plot_ly(
@@ -69,26 +69,34 @@ fn <- function(input, output, session, monthly_data, monthly_data_station) {
           add_trace(y = ~o3, name = "o3") %>%
           add_trace(y = ~no2, name = "no2") %>%
           layout(
-            title = "Data SPKU Jakarta 2011-2023",
+            title = paste("Data SPKU Jakarta", paste(
+              format(date_range()[1], "%B %Y"),
+              format(date_range()[2], "%B %Y"),
+              sep = " - "
+            )),
             hovermode = "x unified",
             xaxis = list(title = ""),
-            yaxis = list(title = "Particle level (µg/m³)")
+            yaxis = list(title = "pollutant level (µg/m³)")
           )
       } else {
         monthly_data %>%
           subset(month > date_range()[1] & month < date_range()[2]) %>%
           plot_ly(
             x = ~month,
-            y = ~get(tolower(particle_selected())),
+            y = ~get(tolower(pollutant_selected())),
             name = "pm10",
             type = "scatter",
             mode = "lines"
           ) %>%
           layout(
-            title = "Data SPKU Jakarta 2011-2023",
+            title = paste("Data SPKU Jakarta", paste(
+              format(date_range()[1], "%B %Y"),
+              format(date_range()[2], "%B %Y"),
+              sep = " - "
+            )),
             hovermode = "x unified",
             xaxis = list(title = ""),
-            yaxis = list(title = paste(particle_selected(), "level (µg/m³)"))
+            yaxis = list(title = paste(pollutant_selected(), "level (µg/m³)"))
           )
       }
     }
@@ -96,7 +104,7 @@ fn <- function(input, output, session, monthly_data, monthly_data_station) {
     if (station_selected() == "All (avg)") {
       get_avg_plot()
     } else {
-      if (particle_selected() == "All") {
+      if (pollutant_selected() == "All") {
         # Fallback if something fails, this should not be able to be selected
         monthly_data_station %>%
           plot_ly(
@@ -115,15 +123,15 @@ fn <- function(input, output, session, monthly_data, monthly_data_station) {
           subset(stasiun == station_selected()) %>%
           plot_ly(
             x = ~month,
-            y = ~get(tolower(particle_selected())),
+            y = ~get(tolower(pollutant_selected())),
             type = "scatter",
             mode = "lines"
           ) %>%
           layout(
-            title = paste(particle_selected(), "level in") %>% paste(station_selected()),
+            title = paste(pollutant_selected(), "level in") %>% paste(station_selected()),
             hovermode = "x unified",
             xaxis = list(title = ""),
-            yaxis = list(title = paste(particle_selected(), "level (µg/m³)"))
+            yaxis = list(title = paste(pollutant_selected(), "level (µg/m³)"))
           )
       }
     }

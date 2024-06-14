@@ -16,27 +16,17 @@ stations <- c(
   "DKI5 (Kebon Jeruk)"
 )
 
-# Code from https://gist.github.com/micstr/49641c2767765bf0d0be716f6634a89e
-dateRangeInputMonth <- function(inputId, label, minview = "days", maxview = "decades", ...) {
-  d <- shiny::dateRangeInput(inputId, label, ...)
-  d$children[[2L]]$children[[1]]$attribs[["data-date-min-view-mode"]] <- minview
-  d$children[[2L]]$children[[3]]$attribs[["data-date-min-view-mode"]] <- minview
-  d$children[[2L]]$children[[1]]$attribs[["data-date-max-view-mode"]] <- maxview
-  d$children[[2L]]$children[[3]]$attribs[["data-date-max-view-mode"]] <- maxview
-  d
-}
-
 # Page Layout
 page <- sidebarLayout(
   sidebarPanel(
     "",
     selectizeInput(
-      "particle_input",
-      label = "Particle",
+      "pollutant_input",
+      label = "Pollutant",
       choices = select_list,
       multiple = FALSE,
       selected = "All",
-      options = list(create = TRUE, placeholder = "Choose the particle")
+      options = list(create = TRUE, placeholder = "Choose a pollutant")
     ),
     dateRangeInputMonth(
       "date_range_input",

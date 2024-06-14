@@ -27,6 +27,17 @@ read_data <- function(name) {
   read.csv(file.path(paste(data_path), name))
 }
 
+# Code from https://gist.github.com/micstr/49641c2767765bf0d0be716f6634a89e
+# A shiny ui component for date range selector but customizable views
+dateRangeInputMonth <- function(inputId, label, minview = "days", maxview = "decades", ...) {
+  d <- shiny::dateRangeInput(inputId, label, ...)
+  d$children[[2L]]$children[[1]]$attribs[["data-date-min-view-mode"]] <- minview
+  d$children[[2L]]$children[[3]]$attribs[["data-date-min-view-mode"]] <- minview
+  d$children[[2L]]$children[[1]]$attribs[["data-date-max-view-mode"]] <- maxview
+  d$children[[2L]]$children[[3]]$attribs[["data-date-max-view-mode"]] <- maxview
+  d
+}
+
 # Insert Data
 data11 <- read_data("SPKU11.csv")
 data12 <- read_data("SPKU12.csv")
@@ -177,22 +188,47 @@ monthly_data_station <- data %>%
     no2 = mean(no2, na.rm = TRUE),
     .groups = "drop"
   )
-plot <- pm10app %>%
-  plot_ly(
-    x = ~month,
-    y = ~pm10,
-    color = ~stasiun,
-    type = "scatter",
-    mode = "lines"
-  ) %>%
-  layout(title = " Data SPKU Jakarta 2011-2023", hovermode = "x unified")
-plot
 
+yearly_polutant <- data %>%
+  group_by(tanggal = floor_date(tanggal, "year")) %>%
+  summarise(
+    pm10 = mean(pm10, na.rm = TRUE),
+    so2 = mean(so2, na.rm = TRUE),
+    co = mean(co, na.rm = TRUE),
+    o3 = mean(o3, na.rm = TRUE),
+    no2 = mean(no2, na.rm = TRUE),
+    total = sum(c(pm10, so2, co, o3, no2), na.rm = TRUE),
+    .groups = "drop"
+  )
+
+yearly_polutant_percent <- yearly_polutant %>%
+  group_by(tanggal = floor_date(tanggal, "year")) %>%
+  summarise(
+    pm10 = pm10 / total * 100,
+    so2 = so2 / total * 100,
+    co = co / total * 100,
+    o3 = o3 / total * 100,
+    no2 = no2 / total * 100,
+    .groups = "drop"
+  )
+
+# plot <- persentase_polutan_tahunan %>%
+#   plot_ly(x = ~tanggal, y = ~pm10, type = "bar", name = "pm10", text = ~ floor(pm10)) %>%
+#   add_trace(y = ~so2, name = "so2", text = ~ floor(so2)) %>%
+#   add_trace(y = ~co, name = "co", text = ~ floor(co)) %>%
+#   add_trace(y = ~o3, name = "o3", text = ~ floor(o3)) %>%
+#   add_trace(y = ~no2, name = "no2", text = ~ floor(no2)) %>%
+#   layout(
+#     yaxis = list(title = "Persentase(%)"),
+#     barmode = "stack", title = "Persentase Polutan per Tahun"
+#   )
+# plot
+
+# Get first page layout
+spku_page <- get_page("spku-ui.r")
+pollutant_percent_page <- get_page("pollutant-percent-ui.r")
 
 # View Main Logic
-component1 <- get_page("component1.r")
-spku_page <- get_page("spku-ui.r")
-
 custom_theme <- bootstrapLib(
   bs_theme(
     version = 4,
@@ -211,6 +247,10 @@ ui <- fluidPage(
     tabPanel(
       "SPKU Jakarta",
       spku_page
+    ),
+    tabPanel(
+      "Persentase Polutan",
+      pollutant_percent_page
     )
   )
 )
@@ -224,6 +264,12 @@ server <- function(input, output, session) {
     session = session,
     monthly_data = monthly_data,
     monthly_data_station = monthly_data_station
+  )
+  output$pollutant_percent_graph <- spku_server(
+    input = input,
+    output = output,
+    session = session,
+    yearly_polutant_percent = yearly_polutant_percent
   )
 }
 
