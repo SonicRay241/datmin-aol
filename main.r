@@ -10,6 +10,7 @@ library(ggplot2)
 library(ggiraph)
 library(plotly)
 library(zoo)
+
 # Load environment
 readRenviron(".env")
 path <- Sys.getenv("PROJECT_PATH")
@@ -189,7 +190,7 @@ monthly_data_station <- data %>%
     .groups = "drop"
   )
 
-yearly_polutant <- data %>%
+yearly_pollutant <- data %>%
   group_by(tanggal = floor_date(tanggal, "year")) %>%
   summarise(
     pm10 = mean(pm10, na.rm = TRUE),
@@ -201,7 +202,7 @@ yearly_polutant <- data %>%
     .groups = "drop"
   )
 
-yearly_polutant_percent <- yearly_polutant %>%
+yearly_pollutant_percent <- yearly_pollutant %>%
   group_by(tanggal = floor_date(tanggal, "year")) %>%
   summarise(
     pm10 = pm10 / total * 100,
@@ -256,6 +257,7 @@ ui <- fluidPage(
 )
 
 spku_server <- get_server("spku-server.r")
+pollutant_percent_server <- get_server("pollutant-percent-server.r")
 
 server <- function(input, output, session) {
   output$spku_graph <- spku_server(
@@ -265,11 +267,11 @@ server <- function(input, output, session) {
     monthly_data = monthly_data,
     monthly_data_station = monthly_data_station
   )
-  output$pollutant_percent_graph <- spku_server(
+  output$pollutant_percent_graph <- pollutant_percent_server(
     input = input,
     output = output,
     session = session,
-    yearly_polutant_percent = yearly_polutant_percent
+    yearly_pollutant_percent = yearly_pollutant_percent
   )
 }
 
