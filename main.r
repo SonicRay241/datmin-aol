@@ -10,6 +10,7 @@ library(ggplot2)
 library(ggiraph)
 library(plotly)
 library(zoo)
+
 # Load environment
 readRenviron(".env")
 path <- Sys.getenv("PROJECT_PATH")
@@ -25,6 +26,17 @@ get_server <- function(name) {
 read_data <- function(name) {
   data_path <- paste(path, "/data", sep = "")
   read.csv(file.path(paste(data_path), name))
+}
+
+# Code from https://gist.github.com/micstr/49641c2767765bf0d0be716f6634a89e
+# A shiny ui component for date range selector but customizable views
+dateRangeInputMonth <- function(inputId, label, minview = "days", maxview = "decades", ...) {
+  d <- shiny::dateRangeInput(inputId, label, ...)
+  d$children[[2L]]$children[[1]]$attribs[["data-date-min-view-mode"]] <- minview
+  d$children[[2L]]$children[[3]]$attribs[["data-date-min-view-mode"]] <- minview
+  d$children[[2L]]$children[[1]]$attribs[["data-date-max-view-mode"]] <- maxview
+  d$children[[2L]]$children[[3]]$attribs[["data-date-max-view-mode"]] <- maxview
+  d
 }
 
 # Insert Data
@@ -154,8 +166,6 @@ colSums(is.na(data))
 lapply(data, unique)
 
 
-
-# test plot
 monthly_data <- data %>%
   group_by(month = floor_date(tanggal, "month")) %>%
   summarise(
@@ -168,23 +178,8 @@ monthly_data <- data %>%
   )
 na.omit(monthly_data)
 
-plot <- monthly_data %>%
-  plot_ly(
-    x = ~month,
-    y = ~pm10,
-    name = "pm10",
-    type = "scatter",
-    mode = "lines"
-  ) %>%
-  add_trace(y = ~so2, name = "so2") %>%
-  add_trace(y = ~co, name = "co") %>%
-  add_trace(y = ~o3, name = "o3") %>%
-  add_trace(y = ~no2, name = "no3") %>%
-  layout(title = "Data SPKU Jakarta 2011-2023", hovermode = "x unified")
-plot
-
 # test plot 2
-pm10app <- data %>%
+monthly_data_station <- data %>%
   group_by(stasiun, month = floor_date(tanggal, "month")) %>%
   summarise(
     pm10 = mean(pm10, na.rm = TRUE),
@@ -194,68 +189,114 @@ pm10app <- data %>%
     no2 = mean(no2, na.rm = TRUE),
     .groups = "drop"
   )
-plot <- pm10app %>%
-  plot_ly(
-    x = ~month,
-    y = ~pm10,
-    color = ~stasiun,
-    type = "scatter",
-    mode = "lines"
-  ) %>%
-  layout(title = " Data SPKU Jakarta 2011-2023", hovermode = "x unified")
-plot
 
-
-
-
-# View Main Logic
-component1 <- get_page("component1.r")
-
-custom_theme <- bootstrapLib(
-  bs_theme(
-    version = 4,
-    bg = "#FFFFFF",
-    fg = "#000000",
-    primary = "#0199F8",
-    secondary = "#FF374B",
-    base_font = font_google("Inter")
+yearly_pollutant <- data %>%
+  group_by(tanggal = floor_date(tanggal, "year")) %>%
+  summarise(
+    pm10 = mean(pm10, na.rm = TRUE),
+    so2 = mean(so2, na.rm = TRUE),
+    co = mean(co, na.rm = TRUE),
+    o3 = mean(o3, na.rm = TRUE),
+    no2 = mean(no2, na.rm = TRUE),
+    total = sum(c(pm10, so2, co, o3, no2), na.rm = TRUE),
+    .groups = "drop"
   )
+
+yearly_pollutant_percent <- yearly_pollutant %>%
+  group_by(tanggal = floor_date(tanggal, "year")) %>%
+  summarise(
+    pm10 = pm10 / total * 100,
+    so2 = so2 / total * 100,
+    co = co / total * 100,
+    o3 = o3 / total * 100,
+    no2 = no2 / total * 100,
+    .groups = "drop"
+  )
+
+yearly_air_quality <- data %>%
+  group_by(tanggal = floor_date(tanggal, "year")) %>%
+  summarise(
+    Baik = sum(categori == "Baik"),
+    Sedang = sum(categori == "Sedang"),
+    Tidak_Sehat = sum(categori == "Tidak Sehat"),
+    Sangat_Tidak_Sehat = sum(categori == "Sangat Tidak Sehat"),
+    Berbahaya = sum(categori == "Berbahaya"),
+    total = sum(c(Baik, Sedang, Tidak_Sehat, Sangat_Tidak_Sehat, Berbahaya), na.rm = TRUE),
+    .groups = "drop"
+  )
+
+yearly_air_quality_percent <- yearly_air_quality %>%
+  group_by(tanggal = floor_date(tanggal, "year")) %>%
+  summarise(
+    Baik = Baik / total * 100,
+    Sedang = Sedang / total * 100,
+    Tidak_Sehat = Tidak_Sehat / total * 100,
+    Sangat_Tidak_Sehat = Sangat_Tidak_Sehat / total * 100,
+    Berbahaya = Berbahaya / total * 100,
+    .groups = "drop"
+  )
+
+# Get page layouts
+spku_page <- get_page("spku-ui.r")
+pollutant_percent_page <- get_page("pollutant-percent-ui.r")
+air_quality_page <- get_page("air-quality-ui.r")
+
+# Theme config for shiny app
+custom_theme <- bs_theme(
+  version = 4,
+  bg = "#FFFFFF",
+  fg = "#000000",
+  primary = "#0199F8",
+  secondary = "#575c5d",
+  base_font = font_google("Inter")
 )
 
+# Main UI layout
 ui <- fluidPage(
   theme = custom_theme,
   navbarPage(
     "AOL Datmin",
     tabPanel(
-      "Component 1",
-      component1
+      "SPKU Jakarta",
+      spku_page
     ),
     tabPanel(
-      "Component 2",
-      sidebarLayout(
-        sidebarPanel(
-          "The wok"
-        ),
-        mainPanel(
-          imageOutput("image"),
-        )
-      )
+      "Persentase Polutan",
+      pollutant_percent_page
+    ),
+    tabPanel(
+      "Persentase Kualitas Udara",
+      air_quality_page
     )
   )
 )
 
-server <- function(input, output) {
-  output$image <- renderImage(
-    {
-      list(
-        src = normalizePath(file.path("./wok.jpg")),
-        contentType = "image/png"
-      )
-    },
-    deleteFile = FALSE
+# Load server code
+spku_server <- get_server("spku-server.r")
+pollutant_percent_server <- get_server("pollutant-percent-server.r")
+air_quality_server <- get_server("air-quality-server.r")
+
+# Main server code
+server <- function(input, output, session) {
+  output$spku_graph <- spku_server(
+    input = input,
+    session = session,
+    monthly_data = monthly_data,
+    monthly_data_station = monthly_data_station
+  )
+  output$pollutant_percent_graph <- pollutant_percent_server(
+    input = input,
+    session = session,
+    yearly_pollutant_percent = yearly_pollutant_percent
+  )
+  output$air_quality_percent_graph <- air_quality_server(
+    input = input,
+    session = session,
+    yearly_air_quality_percent = yearly_air_quality_percent
   )
 }
 
-run_with_themer(shinyApp(ui = ui, server = server))
+# Shiny app runtime
+runApp(shinyApp(ui = ui, server = server))
 
 rm(list = ls())
