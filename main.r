@@ -154,8 +154,6 @@ colSums(is.na(data))
 lapply(data, unique)
 
 
-
-# test plot
 monthly_data <- data %>%
   group_by(month = floor_date(tanggal, "month")) %>%
   summarise(
@@ -168,23 +166,8 @@ monthly_data <- data %>%
   )
 na.omit(monthly_data)
 
-plot <- monthly_data %>%
-  plot_ly(
-    x = ~month,
-    y = ~pm10,
-    name = "pm10",
-    type = "scatter",
-    mode = "lines"
-  ) %>%
-  add_trace(y = ~so2, name = "so2") %>%
-  add_trace(y = ~co, name = "co") %>%
-  add_trace(y = ~o3, name = "o3") %>%
-  add_trace(y = ~no2, name = "no3") %>%
-  layout(title = "Data SPKU Jakarta 2011-2023", hovermode = "x unified")
-plot
-
 # test plot 2
-pm10app <- data %>%
+monthly_data_station <- data %>%
   group_by(stasiun, month = floor_date(tanggal, "month")) %>%
   summarise(
     pm10 = mean(pm10, na.rm = TRUE),
@@ -206,10 +189,9 @@ plot <- pm10app %>%
 plot
 
 
-
-
 # View Main Logic
 component1 <- get_page("component1.r")
+spku_page <- get_page("spku-ui.r")
 
 custom_theme <- bootstrapLib(
   bs_theme(
@@ -227,35 +209,24 @@ ui <- fluidPage(
   navbarPage(
     "AOL Datmin",
     tabPanel(
-      "Component 1",
-      component1
-    ),
-    tabPanel(
-      "Component 2",
-      sidebarLayout(
-        sidebarPanel(
-          "The wok"
-        ),
-        mainPanel(
-          imageOutput("image"),
-        )
-      )
+      "SPKU Jakarta",
+      spku_page
     )
   )
 )
 
-server <- function(input, output) {
-  output$image <- renderImage(
-    {
-      list(
-        src = normalizePath(file.path("./wok.jpg")),
-        contentType = "image/png"
-      )
-    },
-    deleteFile = FALSE
+spku_server <- get_server("spku-server.r")
+
+server <- function(input, output, session) {
+  output$spku_graph <- spku_server(
+    input = input,
+    output = output,
+    session = session,
+    monthly_data = monthly_data,
+    monthly_data_station = monthly_data_station
   )
 }
 
-run_with_themer(shinyApp(ui = ui, server = server))
+runApp(shinyApp(ui = ui, server = server))
 
 rm(list = ls())

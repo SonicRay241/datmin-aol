@@ -1,5 +1,8 @@
 # Data Mining AOL Project
 
+## Running the app
+Run the `main.r` file
+
 ## Project Structure
 ```
 .

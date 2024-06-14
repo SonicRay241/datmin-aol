@@ -1,0 +1,131 @@
+library(plotly)
+library(dplyr)
+
+particle_select_list <- c(
+  "All",
+  "PM10",
+  "SO2",
+  "CO",
+  "O3",
+  "NO2"
+)
+
+particle_select_list_2 <- c(
+  "PM10",
+  "SO2",
+  "CO",
+  "O3",
+  "NO2"
+)
+
+fn <- function(input, output, session, monthly_data, monthly_data_station) {
+  particle_selected <- reactive({
+    input$particle_input
+  })
+
+  date_range <- reactive({
+    input$date_range_input
+  })
+
+  station_selected <- reactive({
+    input$station_input
+  })
+
+  observe({
+    if (input$station_input == "All (avg)") {
+      # monthly_data <- monthly_data[monthly_data$stasiun == station_selected()]
+      updateSelectizeInput(
+        session,
+        "particle_input",
+        choices = particle_select_list,
+        selected = "All",
+        server = TRUE
+      )
+    } else {
+      updateSelectizeInput(
+        session,
+        "particle_input",
+        choices = particle_select_list_2,
+        selected = "PM10",
+        server = TRUE
+      )
+    }
+  })
+
+  renderPlotly({
+    get_avg_plot <- function() {
+      if (particle_selected() == "All") {
+        monthly_data %>%
+          subset(month > date_range()[1] & month < date_range()[2]) %>%
+          plot_ly(
+            x = ~month,
+            y = ~pm10,
+            name = "pm10",
+            type = "scatter",
+            mode = "lines"
+          ) %>%
+          add_trace(y = ~so2, name = "so2") %>%
+          add_trace(y = ~co, name = "co") %>%
+          add_trace(y = ~o3, name = "o3") %>%
+          add_trace(y = ~no2, name = "no2") %>%
+          layout(
+            title = "Data SPKU Jakarta 2011-2023",
+            hovermode = "x unified",
+            xaxis = list(title = ""),
+            yaxis = list(title = "Particle level (µg/m³)")
+          )
+      } else {
+        monthly_data %>%
+          subset(month > date_range()[1] & month < date_range()[2]) %>%
+          plot_ly(
+            x = ~month,
+            y = ~get(tolower(particle_selected())),
+            name = "pm10",
+            type = "scatter",
+            mode = "lines"
+          ) %>%
+          layout(
+            title = "Data SPKU Jakarta 2011-2023",
+            hovermode = "x unified",
+            xaxis = list(title = ""),
+            yaxis = list(title = paste(particle_selected(), "level (µg/m³)"))
+          )
+      }
+    }
+
+    if (station_selected() == "All (avg)") {
+      get_avg_plot()
+    } else {
+      if (particle_selected() == "All") {
+        # Fallback if something fails, this should not be able to be selected
+        monthly_data_station %>%
+          plot_ly(
+            x = ~month,
+            y = ~pm10,
+            color = ~stasiun,
+            type = "scatter",
+            mode = "lines"
+          ) %>%
+          layout(
+            title = " Data SPKU Jakarta 2011-2023",
+            hovermode = "x unified"
+          )
+      } else {
+        monthly_data_station %>%
+          subset(stasiun == station_selected()) %>%
+          plot_ly(
+            x = ~month,
+            y = ~get(tolower(particle_selected())),
+            type = "scatter",
+            mode = "lines"
+          ) %>%
+          layout(
+            title = paste(particle_selected(), "level in") %>% paste(station_selected()),
+            hovermode = "x unified",
+            xaxis = list(title = ""),
+            yaxis = list(title = paste(particle_selected(), "level (µg/m³)"))
+          )
+      }
+    }
+  })
+}
