@@ -18,7 +18,7 @@ pollutant_select_list_2 <- c(
   "NO2"
 )
 
-fn <- function(input, output, session, monthly_data, monthly_data_station) {
+fn <- function(input, session, monthly_data, monthly_data_station) {
   pollutant_selected <- reactive({
     input$pollutant_input
   })

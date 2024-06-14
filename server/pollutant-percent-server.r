@@ -1,7 +1,7 @@
 library(plotly)
 library(dplyr)
 
-fn <- function(input, output, session, yearly_pollutant_percent) {
+fn <- function(input, session, yearly_pollutant_percent) {
   pollutant_selected <- reactive({
     input$pollutant_input_2
   })
@@ -10,7 +10,6 @@ fn <- function(input, output, session, yearly_pollutant_percent) {
     input$date_range_input_2
   })
 
-  print(summary(yearly_polutant_percent))
   renderPlotly({
     if (pollutant_selected() == "All") {
       yearly_pollutant_percent %>%

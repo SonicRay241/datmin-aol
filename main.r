@@ -213,34 +213,45 @@ yearly_pollutant_percent <- yearly_pollutant %>%
     .groups = "drop"
   )
 
-# plot <- persentase_polutan_tahunan %>%
-#   plot_ly(x = ~tanggal, y = ~pm10, type = "bar", name = "pm10", text = ~ floor(pm10)) %>%
-#   add_trace(y = ~so2, name = "so2", text = ~ floor(so2)) %>%
-#   add_trace(y = ~co, name = "co", text = ~ floor(co)) %>%
-#   add_trace(y = ~o3, name = "o3", text = ~ floor(o3)) %>%
-#   add_trace(y = ~no2, name = "no2", text = ~ floor(no2)) %>%
-#   layout(
-#     yaxis = list(title = "Persentase(%)"),
-#     barmode = "stack", title = "Persentase Polutan per Tahun"
-#   )
-# plot
+yearly_air_quality <- data %>%
+  group_by(tanggal = floor_date(tanggal, "year")) %>%
+  summarise(
+    Baik = sum(categori == "Baik"),
+    Sedang = sum(categori == "Sedang"),
+    Tidak_Sehat = sum(categori == "Tidak Sehat"),
+    Sangat_Tidak_Sehat = sum(categori == "Sangat Tidak Sehat"),
+    Berbahaya = sum(categori == "Berbahaya"),
+    total = sum(c(Baik, Sedang, Tidak_Sehat, Sangat_Tidak_Sehat, Berbahaya), na.rm = TRUE),
+    .groups = "drop"
+  )
 
-# Get first page layout
+yearly_air_quality_percent <- yearly_air_quality %>%
+  group_by(tanggal = floor_date(tanggal, "year")) %>%
+  summarise(
+    Baik = Baik / total * 100,
+    Sedang = Sedang / total * 100,
+    Tidak_Sehat = Tidak_Sehat / total * 100,
+    Sangat_Tidak_Sehat = Sangat_Tidak_Sehat / total * 100,
+    Berbahaya = Berbahaya / total * 100,
+    .groups = "drop"
+  )
+
+# Get page layouts
 spku_page <- get_page("spku-ui.r")
 pollutant_percent_page <- get_page("pollutant-percent-ui.r")
+air_quality_page <- get_page("air-quality-ui.r")
 
-# View Main Logic
-custom_theme <- bootstrapLib(
-  bs_theme(
-    version = 4,
-    bg = "#FFFFFF",
-    fg = "#000000",
-    primary = "#0199F8",
-    secondary = "#FF374B",
-    base_font = font_google("Inter")
-  )
+# Theme config for shiny app
+custom_theme <- bs_theme(
+  version = 4,
+  bg = "#FFFFFF",
+  fg = "#000000",
+  primary = "#0199F8",
+  secondary = "#575c5d",
+  base_font = font_google("Inter")
 )
 
+# Main UI layout
 ui <- fluidPage(
   theme = custom_theme,
   navbarPage(
@@ -252,29 +263,40 @@ ui <- fluidPage(
     tabPanel(
       "Persentase Polutan",
       pollutant_percent_page
+    ),
+    tabPanel(
+      "Persentase Kualitas Udara",
+      air_quality_page
     )
   )
 )
 
+# Load server code
 spku_server <- get_server("spku-server.r")
 pollutant_percent_server <- get_server("pollutant-percent-server.r")
+air_quality_server <- get_server("air-quality-server.r")
 
+# Main server code
 server <- function(input, output, session) {
   output$spku_graph <- spku_server(
     input = input,
-    output = output,
     session = session,
     monthly_data = monthly_data,
     monthly_data_station = monthly_data_station
   )
   output$pollutant_percent_graph <- pollutant_percent_server(
     input = input,
-    output = output,
     session = session,
     yearly_pollutant_percent = yearly_pollutant_percent
   )
+  output$air_quality_percent_graph <- air_quality_server(
+    input = input,
+    session = session,
+    yearly_air_quality_percent = yearly_air_quality_percent
+  )
 }
 
+# Shiny app runtime
 runApp(shinyApp(ui = ui, server = server))
 
 rm(list = ls())
