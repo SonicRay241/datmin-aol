@@ -257,15 +257,15 @@ ui <- fluidPage(
   navbarPage(
     "AOL Datmin",
     tabPanel(
-      "SPKU Jakarta",
+      "Pollutant Level",
       spku_page
     ),
     tabPanel(
-      "Persentase Polutan",
+      "Pollutant Distribution",
       pollutant_percent_page
     ),
     tabPanel(
-      "Persentase Kualitas Udara",
+      "AQI Rating",
       air_quality_page
     )
   )
