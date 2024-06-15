@@ -1,14 +1,8 @@
-library(shiny)
 library(bslib)
-
 library(dplyr)
-library(readxl)
 library(lubridate)
-library(tidyr)
-library(ggplot2)
-
-library(ggiraph)
 library(plotly)
+library(shiny)
 library(zoo)
 
 # Load environment
