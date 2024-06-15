@@ -52,7 +52,7 @@ fn <- function(input, session, yearly_air_quality_percent) {
             dtick = "M12",
             ticklabelmode = "instant"
           ),
-          yaxis = list(title = "Persentase(%)"),
+          yaxis = list(title = "Percentage(%)"),
           barmode = "stack",
           title = "Jakarta's Yearly AQI Rating Distribution"
         )
@@ -75,7 +75,7 @@ fn <- function(input, session, yearly_air_quality_percent) {
             dtick = "M12",
             ticklabelmode = "instant"
           ),
-          yaxis = list(title = "Persentase(%)"),
+          yaxis = list(title = "Percentage(%)"),
           barmode = "stack",
           title = "Yearly" %>%
             paste(air_quality_selected_raw()) %>%

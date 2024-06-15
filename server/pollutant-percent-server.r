@@ -32,7 +32,7 @@ fn <- function(input, session, yearly_pollutant_percent) {
             dtick = "M12",
             ticklabelmode = "instant"
           ),
-          yaxis = list(title = "Persentase(%)"),
+          yaxis = list(title = "Percentage(%)"),
           barmode = "stack", title = "Jakarta's Yearly Pollutant Distribution"
         )
     } else {
@@ -55,7 +55,7 @@ fn <- function(input, session, yearly_pollutant_percent) {
             dtick = "M12",
             ticklabelmode = "instant"
           ),
-          yaxis = list(title = "Persentase(%)"),
+          yaxis = list(title = "Percentage(%)"),
           barmode = "stack",
           title = "Yearly"
           %>% paste(pollutant_selected())
