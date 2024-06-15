@@ -38,14 +38,14 @@ fn <- function(input, session, monthly_data, monthly_data_station) {
             )),
             hovermode = "x unified",
             xaxis = list(title = ""),
-            yaxis = list(title = "pollutant level (µg/m³)")
+            yaxis = list(title = "Pollutant level (µg/m³)")
           )
       } else {
         monthly_data %>%
           subset(month > date_range()[1] & month < date_range()[2]) %>%
           plot_ly(
             x = ~month,
-            y = ~ get(tolower(pollutant_selected())),
+            y = ~ pollutant_selected() %>% tolower() %>% get(),
             name = "pm10",
             type = "scatter",
             mode = "lines"
@@ -58,7 +58,9 @@ fn <- function(input, session, monthly_data, monthly_data_station) {
             )),
             hovermode = "x unified",
             xaxis = list(title = ""),
-            yaxis = list(title = paste(pollutant_selected(), "level (µg/m³)"))
+            yaxis = list(
+              title = pollutant_selected() %>% paste("level (µg/m³)")
+            )
           )
       }
     }
@@ -84,22 +86,31 @@ fn <- function(input, session, monthly_data, monthly_data_station) {
             title = "Pollutants level in" %>% paste(station_selected()),
             hovermode = "x unified",
             xaxis = list(title = ""),
-            yaxis = list(title = paste(pollutant_selected(), "level (µg/m³)"))
+            yaxis = list(
+              title = pollutant_selected() %>% paste("level (µg/m³)")
+            )
           )
       } else {
         monthly_data_station %>%
           subset(stasiun == station_selected()) %>%
           plot_ly(
             x = ~month,
-            y = ~ get(tolower(pollutant_selected())),
+            y = ~ pollutant_selected() %>% tolower() %>% get(),
             type = "scatter",
             mode = "lines"
           ) %>%
           layout(
-            title = paste(pollutant_selected(), "level in") %>% paste(station_selected()),
+            title = pollutant_selected() %>%
+              paste("level in") %>%
+              paste(station_selected()),
             hovermode = "x unified",
-            xaxis = list(title = ""),
-            yaxis = list(title = paste(pollutant_selected(), "level (µg/m³)"))
+            xaxis = list(
+              title = ""
+            ),
+            yaxis = list(
+              title = pollutant_selected() %>%
+                paste("level (µg/m³)")
+            )
           )
       }
     }

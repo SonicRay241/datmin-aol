@@ -18,11 +18,33 @@ fn <- function(input, session, yearly_air_quality_percent) {
     if (air_quality_selected() == "All") {
       yearly_air_quality_percent %>%
         subset(tanggal >= date_range()[1] & tanggal <= date_range()[2]) %>%
-        plot_ly(x = ~tanggal, y = ~Baik, type = "bar", name = "Baik", text = ~ floor(Baik)) %>%
-        add_trace(y = ~Sedang, name = "Sedang", text = ~ floor(Sedang)) %>%
-        add_trace(y = ~Tidak_Sehat, name = "Tidak Sehat", text = ~ floor(Tidak_Sehat)) %>%
-        add_trace(y = ~Sangat_Tidak_Sehat, name = "Sangat Tidak Sehat", text = ~ floor(Sangat_Tidak_Sehat)) %>%
-        add_trace(y = ~Berbahaya, name = "Berbahaya", text = ~ floor(Berbahaya)) %>%
+        plot_ly(
+          x = ~tanggal,
+          y = ~Baik,
+          type = "bar",
+          name = "Baik",
+          text = ~ floor(Baik)
+        ) %>%
+        add_trace(
+          y = ~Sedang,
+          name = "Sedang",
+          text = ~ floor(Sedang)
+        ) %>%
+        add_trace(
+          y = ~Tidak_Sehat,
+          name = "Tidak Sehat",
+          text = ~ floor(Tidak_Sehat)
+        ) %>%
+        add_trace(
+          y = ~Sangat_Tidak_Sehat,
+          name = "Sangat Tidak Sehat",
+          text = ~ floor(Sangat_Tidak_Sehat)
+        ) %>%
+        add_trace(
+          y = ~Berbahaya,
+          name = "Berbahaya",
+          text = ~ floor(Berbahaya)
+        ) %>%
         layout(
           xaxis = list(
             title = "",

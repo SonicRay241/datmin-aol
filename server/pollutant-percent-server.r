@@ -40,9 +40,9 @@ fn <- function(input, session, yearly_pollutant_percent) {
         subset(tanggal >= date_range()[1] & tanggal <= date_range()[2]) %>%
         plot_ly(
           x = ~tanggal,
-          y = ~ get(tolower(pollutant_selected())),
+          y = ~ pollutant_selected() %>% tolower() %>% get(),
           type = "bar",
-          name = tolower(pollutant_selected()),
+          name = pollutant_selected() %>% tolower(),
           text = ~ pollutant_selected() %>%
             tolower() %>%
             get() %>%
