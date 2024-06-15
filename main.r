@@ -192,7 +192,15 @@ plot <- monthly_data %>%
   add_trace(y = ~co, name = "co") %>%
   add_trace(y = ~o3, name = "o3") %>%
   add_trace(y = ~no2, name = "no3") %>%
-  layout(title = "Data SPKU Jakarta 2011-2023", hovermode = "x unified")
+  layout(title = "Data Bulanan Polutan Udara Jakarta", 
+         hovermode = "x unified", 
+         xaxis = list(title = '', 
+                      tickformat = '%Y', 
+                      dtick = "M12",
+                      ticklabelmode="period"),
+         yaxis = list(title = 'ug/m3'),
+         legend = list(orientation = "h",
+                       x = 0.5))
 plot
 
 # plot 2
@@ -254,27 +262,32 @@ persentase_kualitas_tahunan <- kualitas_tahunan %>%
   )
 
 plot <- persentase_kualitas_tahunan %>%
-  plot_ly(x = ~tanggal, y=~Baik, type = 'bar', name = 'Baik') %>%
-  add_trace(y=~Sedang,name = 'Sedang') %>% 
-  add_trace(y=~TS,name = 'Tidak Sehat') %>% 
-  add_trace(y=~STS,name = 'Sangat Tidak Sehat') %>% 
-  add_trace(y=~Berbahaya,name = 'Berbahaya') %>% 
+  plot_ly(x = ~tanggal, y=~Baik, type = 'bar', name = 'Baik', text = ~floor(Baik)) %>%
+  add_trace(y=~Sedang,name = 'Sedang', text = ~floor(Sedang)) %>% 
+  add_trace(y=~TS,name = 'Tidak Sehat', text = ~floor(TS)) %>% 
+  add_trace(y=~STS,name = 'Sangat Tidak Sehat', text = ~floor(STS)) %>% 
+  add_trace(y=~Berbahaya,name = 'Berbahaya', text = ~floor(Berbahaya)) %>% 
   layout(yaxis = list(title = 'Persentase(%)'),
          barmode = 'stack',title="Persentase Kualitas Udara per Tahun")
 plot
 
 # plot 4
+plot <- stack(data[4:8])%>%
+  plot_ly(values = ~values, 
+          labels =~ind,
+          textinfo="label+percent",
+          #marker=list(colors = c("#CAF1DF", "#cbc9f0", "#f0dec9", "#dec9f0", "#eff0c9"),
+          #            line = list(color="white",width = 2)), 
+          colors = c(o3 = '#CAF1DF', pm10 = '#cbc9f0', so2 = '#E1C8B4', co = '#dec9f0', no2 = '#eff0c9'),
+          type = 'pie')
+plot
 
 
 
 
-
-
-
-
-
-
-
+df <- data.frame(date = as.Date(c("2023-01-15", "2023-05-20", "2023-09-10")))
+df$month <- format(df$date, "%B %Y")
+print(df)
 
 
 
