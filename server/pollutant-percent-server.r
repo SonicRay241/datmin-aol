@@ -36,7 +36,7 @@ fn <- function(input, session, yearly_pollutant_percent) {
           barmode = "stack", title = "Persentase Polutan per Tahun"
         )
     } else {
-      yearly_polutant_percent %>%
+      yearly_pollutant_percent %>%
       subset(tanggal >= date_range()[1] & tanggal <= date_range()[2]) %>%
       plot_ly(
         x = ~tanggal,
