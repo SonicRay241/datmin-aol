@@ -33,29 +33,33 @@ fn <- function(input, session, yearly_pollutant_percent) {
             ticklabelmode = "instant"
           ),
           yaxis = list(title = "Persentase(%)"),
-          barmode = "stack", title = "Persentase Polutan per Tahun"
+          barmode = "stack", title = "Jakarta's Yearly Pollutant Distribution"
         )
     } else {
       yearly_pollutant_percent %>%
-      subset(tanggal >= date_range()[1] & tanggal <= date_range()[2]) %>%
-      plot_ly(
-        x = ~tanggal,
-        y = ~get(tolower(pollutant_selected())),
-        type = "bar",
-        name = tolower(pollutant_selected()),
-        text = ~ pollutant_selected() %>% tolower() %>% get() %>% floor()
-      ) %>%
-      layout(
-        xaxis = list(title = "",
-          tickformat = "%Y",
-          dtick = "M12",
-          ticklabelmode = "instant"
-        ),
-        yaxis = list(title = "Persentase(%)"),
-        barmode = "stack",
-        title = "Persentase"
+        subset(tanggal >= date_range()[1] & tanggal <= date_range()[2]) %>%
+        plot_ly(
+          x = ~tanggal,
+          y = ~ get(tolower(pollutant_selected())),
+          type = "bar",
+          name = tolower(pollutant_selected()),
+          text = ~ pollutant_selected() %>%
+            tolower() %>%
+            get() %>%
+            floor()
+        ) %>%
+        layout(
+          xaxis = list(
+            title = "",
+            tickformat = "%Y",
+            dtick = "M12",
+            ticklabelmode = "instant"
+          ),
+          yaxis = list(title = "Persentase(%)"),
+          barmode = "stack",
+          title = "Yearly"
           %>% paste(pollutant_selected())
-          %>% paste("per Tahun")
+          %>% paste("Percentage in Jakarta")
         )
     }
   })
